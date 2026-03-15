@@ -40,7 +40,7 @@ The implementation uses the squared exponential (RBF) kernel and employs Cholesk
 flowchart TB
     subgraph InputLayer["Input Layer"]
         A[Training Data X, y]
-        B[Test Inputs x*]
+        B[Test Inputs x-star]
         C[Hyperparameters]
     end
 
@@ -54,9 +54,9 @@ flowchart TB
     end
 
     subgraph OutputLayer["Output Layer"]
-        G[Predictive Mean f*]
-        H[Predictive Variance V[f*]]
-        I[Class Probability π̄*]
+        G[Predictive Mean f-bar]
+        H[Predictive Variance V]
+        I[Class Probability pi-bar]
         J[Log Marginal Likelihood]
     end
 
@@ -111,16 +111,16 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[Input: X, y, x*, kernel, σₙ] --> B[Compute K = kernel(X, X)]
-    B --> C[K_noise = K + σₙ²I + jitter]
-    C --> D[L = Cholesky(K_noise)]
-    D --> E[α = L⁻¹ᵀ(L⁻¹y)]
-    E --> F[k* = kernel(X, x*)]
-    F --> G[f̄* = k*ᵀα]
-    G --> H[v = L⁻¹k*]
-    H --> I[V[f*] = k(x*,x*) - vᵀv]
-    I --> J[log p(y|X) = -½yᵀα - Σlog Lᵢᵢ - n/2 log 2π]
-    J --> K[Output: f̄*, V[f*], log marginal]
+    A[Input: X, y, x-star, kernel, sigma_n] --> B[Compute K = kernel X X]
+    B --> C[K_noise = K + sigma_n^2 I + jitter]
+    C --> D[L = Cholesky K_noise]
+    D --> E[alpha = L inv T L inv y]
+    E --> F[k-star = kernel X x-star]
+    F --> G[f-bar = k-star T alpha]
+    G --> H[v = L inv k-star]
+    H --> I[V = k x-star x-star minus v T v]
+    I --> J[log p y given X]
+    J --> K[Output: f-bar, V, log marginal]
 ```
 
 ### Algorithms 3.1 and 3.2: Binary GP Classification Flow
@@ -128,21 +128,21 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[Input: X, y, K] --> B[Initialize f = 0]
-    B --> C[Compute W = -∇∇log p(y|f)]
-    C --> D[B = I + W¹/² K W¹/²]
-    D --> E[L = Cholesky(B)]
-    E --> F[b = Wf + ∇log p(y|f)]
-    F --> G[a = b - W¹/² L⁻¹ᵀ(L⁻¹ W¹/² Kb)]
+    B --> C[Compute W = neg Hessian log p y given f]
+    C --> D[B = I + W half K W half]
+    D --> E[L = Cholesky B]
+    E --> F[b = Wf + grad log p y given f]
+    F --> G[a = b minus W half L inv W half Kb]
     G --> H[f_new = Ka]
     H --> I{Converged?}
     I -->|No| B
-    I -->|Yes| J[Output: f̂ mode]
-    J --> K[For each x*: k* = kernel(X, x*)]
-    K --> L[f̄* = k*ᵀ ∇log p(y|f̂)]
-    L --> M[v = L⁻¹(W¹/² k*)]
-    M --> N[V[f*] = k(x*,x*) - vᵀv]
-    N --> O[π̄* = Φ(f̄*/√(1+V[f*]))]
-    O --> P[Output: π̄*]
+    I -->|Yes| J[Output: f-hat mode]
+    J --> K[For each x-star: k-star = kernel X x-star]
+    K --> L[f-bar = k-star T grad log p y given f-hat]
+    L --> M[v = L inv W half k-star]
+    M --> N[V = k x-star x-star minus v T v]
+    N --> O[pi-bar = Phi f-bar over sqrt 1 plus V]
+    O --> P[Output: pi-bar]
 ```
 
 ### Kernel Function Specification
@@ -172,7 +172,7 @@ flowchart TB
         P1A --> P1C[Toy 2D Regression Data]
         P1A --> P1D[Breast Cancer Dataset]
         P1A --> P1E[Toy 2D Classification Data]
-        P1B --> P1F[data/*.csv]
+        P1B --> P1F[data CSV files]
         P1C --> P1F
         P1D --> P1F
         P1E --> P1F
